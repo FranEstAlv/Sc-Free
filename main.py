@@ -30,6 +30,7 @@ CHANNEL_MAPPING = {
     "@viplunaticscrapper": "-1004402510853",  # Cambiar por tu canal real
     "@AsukaScr": "-1004402510853",          # Cambiar por tu canal real
     "-1003636233013": "-1004402510853", # Cambiar por tu canal real
+    "-1003658677167": "-1004402510853"
 }
 
 app = Client("bot2", bot_token=BOT_TOKEN_2)
