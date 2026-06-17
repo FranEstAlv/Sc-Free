@@ -27,9 +27,9 @@ if not BOT_TOKEN_2:
 
 # Configuración de canales destino (MODIFICA ESTOS VALORES)
 CHANNEL_MAPPING = {
-    "@viplunaticscrapper": "@canal_destino_vip",  # Cambiar por tu canal real
-    "@AsukaScr": "",          # Cambiar por tu canal real
-    "-1003636233013": "@canal_destino_exclusive", # Cambiar por tu canal real
+    "@viplunaticscrapper": "-1004402510853",  # Cambiar por tu canal real
+    "@AsukaScr": "-1004402510853",          # Cambiar por tu canal real
+    "-1003636233013": "-1004402510853", # Cambiar por tu canal real
 }
 
 app = Client("bot2", bot_token=BOT_TOKEN_2)
