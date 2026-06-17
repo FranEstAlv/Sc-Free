@@ -36,7 +36,7 @@ CHANNEL_MAPPING = {
     "-1003658677167": "-1004402510853"
 }
 
-app = Client("bot2", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN_2, user_id=USER_ID)
+app = Client("bot2", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN_2)
 
 # ==================== TELEGRAPH ====================
 async def create_telegraph_article(card_data: str, source_info: str) -> Optional[str]:
