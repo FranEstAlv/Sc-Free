@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 # Configuración
 BOT_TOKEN_2 = os.environ.get("BOT_TOKEN_2")
 BOT1_ID = int(os.environ.get("BOT1_ID", 8614851086))
+API_ID = os.environ.get("API_ID", "")
+API_HASH = os.environ.get("API_HASH", "")
 
 # Validar variables
 if not BOT_TOKEN_2:
