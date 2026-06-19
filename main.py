@@ -67,7 +67,7 @@ DB_VOLUME: str = os.environ.get("DB_VOLUME", "/data")
 DB_FILENAME: str = os.environ.get("DB_FILENAME", "scrapp.sqlite3")
 CSV_FILE: str = "tarjetas.csv"
 
-# Dominios que deben ser procesados para extraer tarjetas
+# Dominios que deben ser procesados para extraer ccs
 PROCESSABLE_LINK_DOMAINS: List[str] = [
     "telegram.ph",
     "telegra.ph",
