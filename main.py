@@ -44,7 +44,7 @@ try:
 except ValueError:
     DESTINATION_CHAT = DESTINATION_CHAT_STR
 
-SEND_INTERVAL_SECONDS: int = int(os.environ.get("SEND_INTERVAL_SECONDS", 180))
+SEND_INTERVAL_SECONDS: int = int(os.environ.get("SEND_INTERVAL_SECONDS", 45))
 DESTINATION_CHAT_ID: Optional[int] = DESTINATION_CHAT if isinstance(DESTINATION_CHAT, int) else None
 DESTINATION_REFRESH_PENDING: bool = False
 BUTTON_URL = os.environ.get("BUTTON_URL", "")
@@ -53,13 +53,7 @@ BOT2_CHAT_ID = os.environ.get("BOT2_CHAT_ID", "")
 
 CHATS_TO_SCRAPE: List[str] = [
     "@viplunaticscrapper",
-    "@AsukaScr",
-    "-1003636233013",
-    "-1003075577632",
-    "-1003658677167",
-    "-1002408067156",
-    "-1002271492504",
-    "-1002328190486"
+    "@AsukaScr"
 ]
 
 CHANNEL_MAPPING: Dict[str, Optional[Dict[str, str]]] = {
@@ -976,7 +970,7 @@ async def deliver_card_message(message_content: str) -> bool:
     reply_markup = None
     if BUTTON_URL:
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("⭐ OLIMPO", url=BUTTON_URL)]]
+            [[InlineKeyboardButton("⭐ OLIMPO BINS", url=BUTTON_URL)]]
         )
     
     try:
