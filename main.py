@@ -24,8 +24,6 @@ API_ID_STR = os.environ.get("API_ID")
 API_HASH = os.environ.get("API_HASH")
 SESSION_STRING = os.environ.get("SESSION_STRING", "").strip().strip("\"\'")
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-BOT_COMM_CHANNEL = os.environ.get("BOT_COMM_CHANNEL", "")
-TELEGRAPH_SOURCE = "@AsukaScr"
 
 # Validar variables críticas
 if not all([API_ID_STR, API_HASH, BOT_TOKEN]):
@@ -58,9 +56,6 @@ CHATS_TO_SCRAPE: List[str] = [
     "@AsukaScr"
 ]
 
-CHANNEL_MAPPING: Dict[str, Optional[Dict[str, str]]] = {
-    "-1002328190486": {"destination": "DESTINATION_CHAT_ID"}
-}
     
 CHECK_INTERVAL: int = int(os.environ.get("CHECK_INTERVAL", 30))
 DB_VOLUME: str = os.environ.get("DB_VOLUME", "/data")
@@ -108,22 +103,6 @@ def country_flag(country_name: str) -> str:
         return ""
     return "".join(chr(ord(char) + 127397) for char in country_code)
 
-async def notify_bot2(card_data: str, source_info: str) -> bool:
-    try:
-        if not BOT_TOKEN_2 or not BOT2_CHAT_ID:
-            logger.warning("❌ Variables BOT_TOKEN_2 o BOT2_CHAT_ID no configuradas")
-            return False
-
-        message_text = f"💳|{card_data}|{source_info}"
-
-        await app.send_message(BOT2_CHAT_ID, message_text)
-
-        logger.info(f"✅ Datos enviados exitosamente al Bot 2: {source_info[:50]}...")
-        return True
-
-    except Exception as e:
-        logger.error(f"❌ Error al notificar al Bot 2: {e}")
-        return False
 
 def extract_bin_from_card(card_data: str) -> str:
     """Extrae los primeros 6 dígitos (BIN) de la tarjeta"""
@@ -160,7 +139,7 @@ def extract_bin_info_from_source(source_info: str) -> dict:
             elif "Pais:" in part:
                 info["pais"] = part.split("Pais:")[1].strip()
     
-    return info
+    return info_source
 
 def format_olimpo_message(bin_number: str, bin_info: dict) -> str:
     """Formatea el mensaje estilo OLIMPO"""
@@ -183,7 +162,7 @@ def format_olimpo_message(bin_number: str, bin_info: dict) -> str:
     return message
 
 async def create_telegraph_article(card_data: str, source_info: str) -> str:
-    """Crea artículo en telegra.ph con la tarjeta completa"""
+    """Crea artículo en telegra.ph"""
     try:
         title = "💳 Tarjeta Completa"
         content = [
@@ -201,9 +180,9 @@ async def create_telegraph_article(card_data: str, source_info: str) -> str:
         
         async with aiohttp.ClientSession() as session:
             payload = {
-                "title": title,
+                "title": "OLIMPO SCRAPPER",
                 "author_name": "OLIMPO BINS",
-                "author_url": "https://t.me/",
+                "author_url": "https://t.me/olimpobins/6",
                 "content": json.dumps(content),
                 "return_content": False
             }
