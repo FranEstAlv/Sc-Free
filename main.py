@@ -7,6 +7,8 @@ import logging
 import html
 import tempfile
 import aiohttp
+import json
+from datetime import datetime
 from urllib.parse import urlparse
 from pyrogram.types import InlineKeyboardButton, ReplyKeyboardMarkup, Message, InlineKeyboardMarkup
 from typing import Dict, List, Optional, Any, Union
@@ -122,6 +124,105 @@ async def notify_bot2(card_data: str, source_info: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Error al notificar al Bot 2: {e}")
         return False
+
+def extract_bin_from_card(card_data: str) -> str:
+    """Extrae los primeros 6 dígitos (BIN) de la tarjeta"""
+    try:
+        card_number = card_data.split("|")[0].strip()
+        digits = re.sub(r'\D', '', card_number)
+        return digits[:6] if len(digits) >= 6 else "000000"
+    except:
+        return "000000"
+
+def extract_bin_info_from_source(source_info: str) -> dict:
+    """Extrae información del BIN del source_info"""
+    # Formato: "Chat: @channel | Bin: 123456 | Banco: SANTANDER | Marca: VISA | Tipo: CREDIT | ..."
+    info = {
+        "banco": "UNKNOWN BANK",
+        "marca": "UNKNOWN",
+        "tipo": "UNKNOWN",
+        "nivel": "UNKNOWN",
+        "pais": "UNKNOWN 🌍"
+    }
+    
+    if "|" in source_info:
+        parts = source_info.split("|")
+        for part in parts:
+            part = part.strip()
+            if "Banco:" in part:
+                info["banco"] = part.split("Banco:")[1].strip()
+            elif "Marca:" in part:
+                info["marca"] = part.split("Marca:")[1].strip()
+            elif "Tipo:" in part:
+                info["tipo"] = part.split("Tipo:")[1].strip()
+            elif "Nivel:" in part:
+                info["nivel"] = part.split("Nivel:")[1].strip()
+            elif "Pais:" in part:
+                info["pais"] = part.split("Pais:")[1].strip()
+    
+    return info
+
+def format_olimpo_message(bin_number: str, bin_info: dict) -> str:
+    """Formatea el mensaje estilo OLIMPO"""
+    message = f"""
+<code>OLIMPO FREE SCRAPPER</code>
+<code>#{bin_number}</code>
+<code>━━━━━━━━</code>
+<code>Bin= {bin_number}</code>
+<code>Banco= {bin_info['banco']}</code>
+<code>Marca= {bin_info['marca']}</code>
+<code>Tipo= {bin_info['tipo']}</code>
+<code>Nivel= {bin_info['nivel']}</code>
+<code>País= {bin_info['pais']}</code>
+<code>━━━━━━━━</code>
+<code>DESARROLLADO POR</code>
+<code>@MrMxyzptlk04</code>
+<code>@Chack0071</code>
+<code>━━━━━━━━</code>
+"""
+    return message
+
+async def create_telegraph_article(card_data: str, source_info: str) -> str:
+    """Crea artículo en telegra.ph con la tarjeta completa"""
+    try:
+        title = "💳 Tarjeta Completa"
+        content = [
+            "<h3>OLIMPO FREE SCRAPPER</h3>",
+            "<h4>🔐 Información Completa</h4>",
+            "<blockquote>",
+            f"{card_data}",
+            "</blockquote>",
+            "<hr>",
+            "<h4>🌍 Metadata</h4>",
+            f"<p><b>Fuente:</b> {None}</p>",
+            f"<p><b>Timestamp:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>",
+            "<hr>",
+            "<p><i>Publicado por OLIMPO BINS</i></p>"
+        ]
+        
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                "title": title,
+                "author_name": "OLIMPO BINS",
+                "author_url": "https://t.me/",
+                "content": json.dumps(content),
+                "return_content": False
+            }
+            
+            async with session.post(
+                "https://api.telegra.ph/createPage",
+                json=payload,
+                timeout=30
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get("ok"):
+                        return data["result"]["url"]
+        
+        return None
+    except Exception as e:
+        logger.error(f"❌ Error creando telegra.ph: {e}")
+        return None
 
 # --- Configuración de Logging ---
 logging.basicConfig(
@@ -959,14 +1060,62 @@ async def register_destination_chat_event(chat) -> None:
 
 
 async def deliver_card_message(message_content: str) -> bool:
-    """Envía un mensaje al destination chat, refrescando el ID si Telegram rechaza el envío."""
+    """Envía un mensaje al destination chat con formato OLIMPO + telegra.ph"""
     global DESTINATION_REFRESH_PENDING
-    from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-  
+    
     destination_chat_id = await resolve_destination_chat()
     if destination_chat_id is None:
         return False
-        
+    
+    # Parsear el mensaje original: 💳|card_data|source_info
+    if message_content.startswith("💳|"):
+        try:
+            parts = message_content.split("|", 2)
+            if len(parts) >= 3:
+                _, card_data, source_info = parts
+                
+                # Extraer información del BIN del source_info
+                bin_info = extract_bin_info_from_source(source_info)
+                bin_number = extract_bin_from_card(card_data)
+                
+                # Crear artículo en telegra.ph
+                telegraph_url = await create_telegraph_article(card_data, source_info)
+                
+                if telegraph_url:
+                    # Formatear mensaje OLIMPO
+                    formatted_message = format_olimpo_message(bin_number, bin_info)
+                    
+                    # Crear botón inline azul para telegra.ph
+                    reply_markup = InlineKeyboardMarkup([[
+                        InlineKeyboardButton("🔗 Ver Tarjeta Completa", url=telegraph_url)
+                    ]])
+                    
+                    # Enviar mensaje formateado
+                    await app.send_message(
+                        destination_chat_id,
+                        formatted_message,
+                        parse_mode=ParseMode.HTML,
+                        reply_markup=reply_markup
+                    )
+                    return True
+                else:
+                    # Fallback: enviar mensaje original si telegra.ph falla
+                    logger.warning("⚠️ Falló telegra.ph, enviando formato original")
+                    return await send_original_message(destination_chat_id, message_content)
+                    
+            else:
+                logger.warning("⚠️ Formato de mensaje inválido, enviando original")
+                return await send_original_message(destination_chat_id, message_content)
+                
+        except Exception as e:
+            logger.error(f"❌ Error procesando formato OLIMPO: {e}")
+            return await send_original_message(destination_chat_id, message_content)
+    else:
+        # Para mensajes que no son tarjetas, enviar normal
+        return await send_original_message(destination_chat_id, message_content)
+
+async def send_original_message(destination_chat_id: int, message_content: str) -> bool:
+    """Envía el mensaje original con botón de OLIMPO BINS"""
     reply_markup = None
     if BUTTON_URL:
         reply_markup = InlineKeyboardMarkup(
@@ -982,30 +1131,9 @@ async def deliver_card_message(message_content: str) -> bool:
         )
         return True
     except Exception as e:
-        logger.warning(
-            f"⚠️ Falló el envío a destination chat {destination_chat_id}; "
-            f"se intentará refrescar el ID: {e}"
-        )
-
-    destination_chat_id = await resolve_destination_chat(force_refresh=True)
-    if destination_chat_id is None:
+        logger.error(f"❌ Error enviando mensaje original: {e}")
         return False
 
-    try:
-        await app.send_message(
-            destination_chat_id,
-            message_content,
-            parse_mode=ParseMode.HTML,
-            reply_markup=reply_markup
-        )
-        return True
-    except Exception as e:
-        DESTINATION_REFRESH_PENDING = True
-        logger.error(
-            f"❌ Error enviando al destination chat {destination_chat_id}. "
-            f"Queda pendiente registrar un evento del canal/grupo para actualizar el ID: {e}"
-        )
-        return False
 
 async def send_card_immediately(card_data: str, source_info: str = "") -> bool:
     """
