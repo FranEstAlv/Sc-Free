@@ -194,7 +194,6 @@ async def create_telegraph_article(card_data: str, source_info: str) -> str:
             "</blockquote>",
             "<hr>",
             "<h4>🌍 Metadata</h4>",
-            f"<p><b>Fuente:</b> {None}</p>",
             f"<p><b>Timestamp:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>",
             "<hr>",
             "<p><i>Publicado por OLIMPO BINS</i></p>"
